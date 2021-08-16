@@ -331,6 +331,19 @@ static void tpa6130a2_channel_enable(u8 channel, int enable)
 	}
 }
 
+/*modify default vol because default vol is low xmysx 2060905
+we do not add Headphone Playback Volume control,
+user can not modify this vol, so we modify default vol here.*/
+static void tpa6130a2_set_init_vol(void)
+{
+	u8 vol = 0;
+
+	vol = tpa6130a2_read(TPA6130A2_REG_VOL_MUTE);
+	vol = vol & 0xC0;
+	vol = vol | 0x1F;//-11.6db
+	tpa6130a2_i2c_write(TPA6130A2_REG_VOL_MUTE, vol);
+}
+
 int tpa6130a2_stereo_enable(struct snd_soc_codec *codec, int enable)
 {
 	int ret = 0;
@@ -447,6 +460,9 @@ static int tpa6130a2_probe(struct i2c_client *client,
 				 TPA6130A2_VERSION_MASK;
 	if ((ret != 1) && (ret != 2))
 		dev_warn(dev, "UNTESTED version detected (%d)\n", ret);
+
+	//modify default vol because default vol is low xmysx 2060905
+	tpa6130a2_set_init_vol();
 
 	/* Disable the chip */
 	ret = tpa6130a2_power(0);
